@@ -1,0 +1,229 @@
+﻿<Grid x:Class="Gantt.ChartLib.Controls.GanttDataGridControl"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:l="clr-namespace:Gantt.ChartLib.Controls"
+      xmlns:m="clr-namespace:Gantt.ChartLib.Utils"
+      xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+      x:Name="TableGrid">
+
+    <Grid.Resources>
+
+        <m:DateTimeToDisplayConverter x:Key="DateTimeToDisplay" />
+
+        <Style TargetType="{x:Type TextBox}" >
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError"
+                         Value="true">
+                    <Setter Property="ToolTip" 
+                            Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=(Validation.Errors)[0].ErrorContent}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="Background" Value="#eee" />
+            <Setter Property="BorderBrush" Value="Silver" />
+            <Setter Property="BorderThickness" Value="1, 0, 0, 1" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Padding" Value="3,0" />
+        </Style>
+
+        <Style TargetType="{x:Type DataGrid}">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="ColumnHeaderHeight" Value="30" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="RowHeight" Value="30" />
+            <Setter Property="GridLinesVisibility" Value="All" />
+            <Setter Property="VerticalGridLinesBrush" Value="Silver" />
+            <Setter Property="HorizontalGridLinesBrush" Value="Silver" />
+            <Setter Property="ColumnWidth" Value="*" />
+            <Setter Property="CanUserResizeColumns" Value="False" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+        </Style>
+
+    </Grid.Resources>
+
+    <Grid.RowDefinitions>
+        <RowDefinition Height="60" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition />
+    </Grid.RowDefinitions>
+
+    <Border Background="#eee"
+            Grid.ColumnSpan="2"
+            BorderThickness="0, 0, 0, 1"
+            BorderBrush="Silver">
+        <TextBlock Text="{Binding Title, ElementName=TableGrid}" 
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center" 
+                   FontWeight="Regular"
+                   Foreground="{Binding TitleForeground, ElementName=TableGrid}"
+                   FontSize="{Binding TitleFontSize, ElementName=TableGrid}" />
+    </Border>
+
+    <ScrollViewer x:Name="headerViewport"
+                  Grid.Row="1"
+                  VerticalScrollBarVisibility="Disabled"
+                  HorizontalScrollBarVisibility="Hidden"
+                  >
+        <DataGrid x:Name="HeaderGrid" 
+                  HeadersVisibility="Column"
+                  Margin="-0.5, -2, 0, 0"
+                  VerticalAlignment="Top">
+
+            <DataGrid.Columns>
+
+                <DataGridTemplateColumn Header="Well Name" 
+                                        x:Name="WellName"
+                                        Width="120"/>
+
+                <DataGridTemplateColumn Header="FLM Task" 
+                                        x:Name="FLMTask"
+                                        Width="100" />
+
+                <DataGridTemplateColumn Header="Proposed Start" 
+                                        x:Name="Start"
+                                        Width="120"/>
+
+                <DataGridTemplateColumn x:Name="Duration"
+                                        Width="100">
+                    <DataGridTemplateColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock FontWeight="Medium"
+                                       HorizontalAlignment="Center">
+                                Duration [<Run Text="days" FontWeight="Normal"/>]
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.HeaderTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Proposed End"
+                                        x:Name="End"
+                                        Width="120"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </ScrollViewer>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Hidden"
+                  Grid.Row="2"
+                  x:Name="gridViewport" 
+                  >
+        <DataGrid x:Name="ContentGrid" 
+                  HeadersVisibility="None"
+                  BorderThickness="1, 0, 0, 1"
+                  ItemsSource="{Binding TaskSchedules}"
+                  VirtualizingPanel.VirtualizationMode="Recycling">
+            
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding ItemName}"
+                                        VerticalAlignment="Center" 
+                                        TextAlignment="Center"
+                                        FontWeight="Regular"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" >
+                                <Rectangle Width="30"
+                                            Height="11"
+                                            Fill="{Binding StatusColor}"
+                                            RadiusX="2"
+                                            RadiusY="2" 
+                                            Margin="5, 0"/>
+
+                                <TextBlock Text="{Binding Task}" 
+                                            Margin="5, 0"
+                                            VerticalAlignment="Center" 
+                                            TextAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <DatePicker BorderThickness="0"
+                                        VerticalAlignment="Center" 
+                                        ToolTip="{Binding StartDate, Converter={StaticResource DateTimeToDisplay}}">
+                                <DatePicker.SelectedDate>
+                                    <Binding Path="StartDate" 
+                                             Mode="TwoWay" 
+                                             UpdateSourceTrigger="PropertyChanged"
+                                             />
+                                </DatePicker.SelectedDate>
+
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectedDateChanged">
+                                        <i:InvokeCommandAction 
+                                                Command="{x:Static l:GanttDataGridControl.DateChangedCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </DatePicker>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox VerticalContentAlignment="Center"
+                                    BorderThickness="0" 
+                                    TextAlignment="Center"
+                                    FontWeight="Regular">
+                                <TextBox.Text>
+                                    <Binding Path="Duration" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                        <Binding.ValidationRules>
+                                            <m:GanttDateValidator />
+                                        </Binding.ValidationRules>
+                                    </Binding>
+                                </TextBox.Text>
+
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="TextChanged">
+                                        <i:InvokeCommandAction 
+                                                Command="{x:Static l:GanttDataGridControl.TextChangedCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <DatePicker BorderThickness="0"
+                                        VerticalAlignment="Center"
+                                        >
+                                <DatePicker.SelectedDate>
+                                    <Binding Path="EndDate" 
+                                             Mode="TwoWay"
+                                             UpdateSourceTrigger="PropertyChanged"
+                                             />
+                                </DatePicker.SelectedDate>
+
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectedDateChanged">
+                                        <i:InvokeCommandAction 
+                                                Command="{x:Static l:GanttDataGridControl.DateChangedCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </DatePicker>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </ScrollViewer>
+</Grid>
